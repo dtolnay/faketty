@@ -44,6 +44,8 @@ fn try_main() -> Result<Exec> {
 
 fn args() -> Vec<CString> {
     let mut app = App::new("faketty")
+        .usage("faketty <program> <args...>")
+        .template("usage: {usage}\n")
         .arg(
             Arg::with_name("program")
                 .multiple(true)
