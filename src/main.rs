@@ -1,5 +1,5 @@
 use nix::fcntl::{self, FcntlArg, FdFlag};
-use nix::pty::{self, ForkptyResult};
+use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
 use nix::unistd::{self, ForkResult, Pid};
 use nix::Result;
@@ -62,9 +62,14 @@ fn args() -> Vec<CString> {
 }
 
 fn forkpty() -> Result<ForkptyResult> {
-    let winsize = None;
+    let winsize = Winsize {
+        ws_row: 24,
+        ws_col: 80,
+        ws_xpixel: 0,
+        ws_ypixel: 0,
+    };
     let termios = None;
-    pty::forkpty(winsize, termios)
+    pty::forkpty(&winsize, termios)
 }
 
 fn exec(args: Vec<CString>) -> Result<Exec> {
