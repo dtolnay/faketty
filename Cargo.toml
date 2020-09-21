@@ -13,3 +13,6 @@ nix = "0.18"
 
 [dev-dependencies]
 scratch = "1.0"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
