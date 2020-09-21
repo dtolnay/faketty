@@ -108,10 +108,18 @@ fn copyfd(read: RawFd, write: RawFd) {
         match unistd::read(read, &mut buf) {
             Ok(0) | Err(_) => return,
             Ok(n) => {
-                let _ = unistd::write(write, &buf[..n]);
+                let _ = write_all(write, &buf[..n]);
             }
         }
     }
+}
+
+fn write_all(fd: RawFd, mut buf: &[u8]) -> Result<()> {
+    while !buf.is_empty() {
+        let n = unistd::write(fd, buf)?;
+        buf = &buf[n..];
+    }
+    Ok(())
 }
 
 fn copyexit(child: Pid) -> ! {
