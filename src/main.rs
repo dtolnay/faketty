@@ -43,14 +43,32 @@ fn try_main() -> Result<Exec> {
 }
 
 fn args() -> Vec<CString> {
-    let program = Arg::with_name("program").required(true).multiple(true);
     let mut app = App::new("faketty")
-        .arg(program)
+        .arg(
+            Arg::with_name("program")
+                .multiple(true)
+                .required_unless_one(&["help", "version"]),
+        )
+        .arg(Arg::with_name("help").long("help"))
+        .arg(Arg::with_name("version").long("version"))
         .setting(AppSettings::TrailingVarArg);
     if let Some(version) = option_env!("CARGO_PKG_VERSION") {
         app = app.version(version);
     }
-    let matches = app.get_matches();
+
+    let matches = app.clone().get_matches();
+    if matches.is_present("help") {
+        let mut stdout = io::stdout();
+        let _ = app.write_long_help(&mut stdout);
+        process::exit(0);
+    }
+    if matches.is_present("version") {
+        let mut stdout = io::stdout();
+        let _ = app.write_version(&mut stdout);
+        let _ = stdout.write_all(b"\n");
+        process::exit(0);
+    }
+
     let args: Vec<_> = matches
         .values_of_os("program")
         .unwrap()
