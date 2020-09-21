@@ -3,6 +3,10 @@ name = "faketty"
 version = "0.0.0"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Wrapper to exec a command in a pty, even if redirecting the output"
+repository = "https://github.com/dtolnay/faketty"
+readme = "README.md"
 
 [dependencies]
 nix = "0.18"
