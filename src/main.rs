@@ -71,16 +71,11 @@ fn args() -> Vec<CString> {
         process::exit(0);
     }
 
-    let args: Vec<_> = matches
+    matches
         .values_of_os("program")
         .unwrap()
         .map(|os_string| CString::new(os_string.as_bytes()).unwrap())
-        .collect();
-    if args.is_empty() {
-        let _ = writeln!(io::stderr(), "usage: faketty PROGRAM ARGS...");
-        process::exit(1);
-    };
-    args
+        .collect()
 }
 
 fn dup(fd: RawFd) -> Result<RawFd> {
