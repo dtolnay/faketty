@@ -1,12 +1,12 @@
+use clap::{App, AppSettings, Arg};
 use nix::fcntl::{self, FcntlArg, FdFlag};
 use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
 use nix::unistd::{self, ForkResult, Pid};
 use nix::Result;
-use std::env;
 use std::ffi::CString;
 use std::io::{self, Write};
-use std::os::unix::ffi::OsStringExt;
+use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::RawFd;
 use std::process;
 
@@ -42,23 +42,31 @@ fn try_main() -> Result<Exec> {
     crate::exec(args)
 }
 
-fn dup(fd: RawFd) -> Result<RawFd> {
-    let new = unistd::dup(fd)?;
-    fcntl::fcntl(new, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC))?;
-    Ok(new)
-}
-
 fn args() -> Vec<CString> {
-    let mut args = env::args_os();
-    let _ = args.next(); // faketty
-    let args: Vec<_> = args
-        .map(|os_string| CString::new(os_string.into_vec()).unwrap())
+    let program = Arg::with_name("program").required(true).multiple(true);
+    let mut app = App::new("faketty")
+        .arg(program)
+        .setting(AppSettings::TrailingVarArg);
+    if let Some(version) = option_env!("CARGO_PKG_VERSION") {
+        app = app.version(version);
+    }
+    let matches = app.get_matches();
+    let args: Vec<_> = matches
+        .values_of_os("program")
+        .unwrap()
+        .map(|os_string| CString::new(os_string.as_bytes()).unwrap())
         .collect();
     if args.is_empty() {
         let _ = writeln!(io::stderr(), "usage: faketty PROGRAM ARGS...");
         process::exit(1);
     };
     args
+}
+
+fn dup(fd: RawFd) -> Result<RawFd> {
+    let new = unistd::dup(fd)?;
+    fcntl::fcntl(new, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC))?;
+    Ok(new)
 }
 
 fn forkpty() -> Result<ForkptyResult> {

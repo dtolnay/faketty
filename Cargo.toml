@@ -9,6 +9,7 @@ repository = "https://github.com/dtolnay/faketty"
 readme = "README.md"
 
 [dependencies]
+clap = "2.33"
 nix = "0.18"
 
 [dev-dependencies]
