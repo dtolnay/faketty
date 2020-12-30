@@ -1,3 +1,5 @@
+#![allow(clippy::empty_enum, clippy::needless_pass_by_value)]
+
 use clap::{App, AppSettings, Arg};
 use nix::fcntl::{self, FcntlArg, FdFlag};
 use nix::pty::{self, ForkptyResult, Winsize};
