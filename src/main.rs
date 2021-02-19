@@ -1,4 +1,8 @@
-#![allow(clippy::empty_enum, clippy::needless_pass_by_value)]
+#![allow(
+    clippy::empty_enum,
+    clippy::let_underscore_drop,
+    clippy::needless_pass_by_value
+)]
 
 use clap::{App, AppSettings, Arg};
 use nix::fcntl::{self, FcntlArg, FdFlag};
