@@ -45,9 +45,7 @@ fn try_main() -> Result<Exec> {
     let size = {
         use terminal_size::{terminal_size, Height, Width};
 
-        let parent_size = terminal_size()
-            .map(|(Width(w), Height(h))| (w, h))
-            .unwrap_or((80, 24));
+        let parent_size = terminal_size().map_or((80, 24), |(Width(w), Height(h))| (w, h));
         (
             size.0.unwrap_or(parent_size.0),
             size.1.unwrap_or(parent_size.1),
