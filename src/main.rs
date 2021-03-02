@@ -16,6 +16,17 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::RawFd;
 use std::process;
 
+struct PtySize(Option<u16>, Option<u16>);
+
+impl<'a> From<(Option<&'a str>, Option<&'a str>)> for PtySize {
+    fn from((width, height): (Option<&'a str>, Option<&'a str>)) -> Self {
+        Self(
+            width.and_then(|w| w.parse::<u16>().ok()),
+            height.and_then(|w| w.parse::<u16>().ok()),
+        )
+    }
+}
+
 enum Exec {}
 
 fn main() -> ! {
@@ -29,16 +40,29 @@ fn main() -> ! {
 }
 
 fn try_main() -> Result<Exec> {
-    let args = crate::args();
+    let (size, args) = crate::args();
+
+    let size = {
+        use terminal_size::{terminal_size, Height, Width};
+
+        let parent_size = terminal_size()
+            .map(|(Width(w), Height(h))| (w, h))
+            .unwrap_or((80, 24));
+        (
+            size.0.unwrap_or(parent_size.0),
+            size.1.unwrap_or(parent_size.1),
+        )
+    };
+
     let stdin = crate::dup(0)?;
     let stderr = crate::dup(2)?;
-    let pty1 = crate::forkpty()?;
+    let pty1 = crate::forkpty(size)?;
     if let ForkResult::Parent { child } = pty1.fork_result {
         crate::copyfd(pty1.master, 1);
         crate::copyexit(child);
     }
     let stdout = crate::dup(1)?;
-    let pty2 = crate::forkpty()?;
+    let pty2 = crate::forkpty(size)?;
     if let ForkResult::Parent { child } = pty2.fork_result {
         crate::copyfd(pty2.master, stderr);
         crate::copyexit(child);
@@ -48,40 +72,54 @@ fn try_main() -> Result<Exec> {
     crate::exec(args)
 }
 
-fn args() -> Vec<CString> {
+fn args() -> (PtySize, Vec<CString>) {
     let mut app = App::new("faketty")
-        .usage("faketty <program> <args...>")
-        .template("usage: {usage}\n")
+        .usage("faketty [OPTIONS] -- <program> <args...>")
+        .arg(
+            Arg::with_name("width")
+                .short("W")
+                .long("width")
+                .takes_value(true)
+                .help("Sets the width of the pty")
+                .validator(|w| {
+                    w.parse::<u32>()
+                        .map(|_| ())
+                        .map_err(|_| "must be a number".to_string())
+                }),
+        )
+        .arg(
+            Arg::with_name("height")
+                .short("H")
+                .long("height")
+                .takes_value(true)
+                .help("Sets the height of the pty")
+                .validator(|w| {
+                    w.parse::<u32>()
+                        .map(|_| ())
+                        .map_err(|_| "must be a number".to_string())
+                }),
+        )
+        .setting(AppSettings::TrailingVarArg)
         .arg(
             Arg::with_name("program")
                 .multiple(true)
                 .required_unless_one(&["help", "version"]),
-        )
-        .arg(Arg::with_name("help").long("help"))
-        .arg(Arg::with_name("version").long("version"))
-        .setting(AppSettings::TrailingVarArg);
+        );
+
     if let Some(version) = option_env!("CARGO_PKG_VERSION") {
         app = app.version(version);
     }
 
-    let matches = app.clone().get_matches();
-    if matches.is_present("help") {
-        let mut stdout = io::stdout();
-        let _ = app.write_long_help(&mut stdout);
-        process::exit(0);
-    }
-    if matches.is_present("version") {
-        let mut stdout = io::stdout();
-        let _ = app.write_version(&mut stdout);
-        let _ = stdout.write_all(b"\n");
-        process::exit(0);
-    }
+    let matches = app.get_matches();
 
-    matches
-        .values_of_os("program")
-        .unwrap()
-        .map(|os_string| CString::new(os_string.as_bytes()).unwrap())
-        .collect()
+    (
+        PtySize::from((matches.value_of("width"), matches.value_of("height"))),
+        matches
+            .values_of_os("program")
+            .unwrap()
+            .map(|os_string| CString::new(os_string.as_bytes()).unwrap())
+            .collect(),
+    )
 }
 
 fn dup(fd: RawFd) -> Result<RawFd> {
@@ -90,10 +128,10 @@ fn dup(fd: RawFd) -> Result<RawFd> {
     Ok(new)
 }
 
-fn forkpty() -> Result<ForkptyResult> {
+fn forkpty(size: (u16, u16)) -> Result<ForkptyResult> {
     let winsize = Winsize {
-        ws_row: 24,
-        ws_col: 80,
+        ws_col: size.0,
+        ws_row: size.1,
         ws_xpixel: 0,
         ws_ypixel: 0,
     };

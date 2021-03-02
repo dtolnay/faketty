@@ -11,6 +11,7 @@ readme = "README.md"
 [dependencies]
 clap = "2.33"
 nix = "0.18"
+terminal_size = "0.1.16"
 
 [dev-dependencies]
 scratch = "1.0"
