@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 clap = "2.33"
-nix = "0.18"
+nix = "0.23"
 
 [dev-dependencies]
 scratch = "1.0"

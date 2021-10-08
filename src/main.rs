@@ -32,13 +32,13 @@ fn try_main() -> Result<Exec> {
     let args = crate::args();
     let stdin = crate::dup(0)?;
     let stderr = crate::dup(2)?;
-    let pty1 = crate::forkpty()?;
+    let pty1 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty1.fork_result {
         crate::copyfd(pty1.master, 1);
         crate::copyexit(child);
     }
     let stdout = crate::dup(1)?;
-    let pty2 = crate::forkpty()?;
+    let pty2 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty2.fork_result {
         crate::copyfd(pty2.master, stderr);
         crate::copyexit(child);
@@ -90,7 +90,7 @@ fn dup(fd: RawFd) -> Result<RawFd> {
     Ok(new)
 }
 
-fn forkpty() -> Result<ForkptyResult> {
+unsafe fn forkpty() -> Result<ForkptyResult> {
     let winsize = Winsize {
         ws_row: 24,
         ws_col: 80,
