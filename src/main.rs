@@ -48,7 +48,7 @@ fn try_main() -> Result<Exec> {
     crate::exec(args)
 }
 
-fn args() -> Vec<CString> {
+fn app() -> App<'static> {
     let mut app = App::new("faketty")
         .override_usage("faketty <program> <args...>")
         .help_template("usage: {usage}")
@@ -66,7 +66,11 @@ fn args() -> Vec<CString> {
     if let Some(version) = option_env!("CARGO_PKG_VERSION") {
         app = app.version(version);
     }
+    app
+}
 
+fn args() -> Vec<CString> {
+    let mut app = app();
     let matches = app.clone().get_matches();
     if matches.is_present("help") {
         let mut stdout = io::stdout();
@@ -136,4 +140,9 @@ fn copyexit(child: Pid) -> ! {
         Ok(WaitStatus::Exited(_pid, code)) => code,
         _ => 0,
     });
+}
+
+#[test]
+fn test_cli() {
+    app().debug_assert();
 }
