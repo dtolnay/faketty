@@ -50,16 +50,19 @@ fn try_main() -> Result<Exec> {
 
 fn args() -> Vec<CString> {
     let mut app = App::new("faketty")
-        .usage("faketty <program> <args...>")
-        .template("usage: {usage}\n")
+        .override_usage("faketty <program> <args...>")
+        .help_template("usage: {usage}")
         .arg(
-            Arg::with_name("program")
-                .multiple(true)
-                .required_unless_one(&["help", "version"]),
+            Arg::new("program")
+                .multiple_values(true)
+                .allow_invalid_utf8(true)
+                .required_unless_present_any(&["help", "version"]),
         )
-        .arg(Arg::with_name("help").long("help"))
-        .arg(Arg::with_name("version").long("version"))
-        .setting(AppSettings::TrailingVarArg);
+        .arg(Arg::new("help").long("help"))
+        .arg(Arg::new("version").long("version"))
+        .setting(AppSettings::TrailingVarArg)
+        .setting(AppSettings::DisableHelpFlag)
+        .setting(AppSettings::DisableVersionFlag);
     if let Some(version) = option_env!("CARGO_PKG_VERSION") {
         app = app.version(version);
     }
@@ -72,8 +75,7 @@ fn args() -> Vec<CString> {
     }
     if matches.is_present("version") {
         let mut stdout = io::stdout();
-        let _ = app.write_version(&mut stdout);
-        let _ = stdout.write_all(b"\n");
+        let _ = stdout.write_all(app.render_version().as_bytes());
         process::exit(0);
     }
 
