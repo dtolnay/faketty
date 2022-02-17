@@ -4,7 +4,7 @@
     clippy::needless_pass_by_value
 )]
 
-use clap::{App, AppSettings, Arg};
+use clap::{Arg, Command};
 use nix::fcntl::{self, FcntlArg, FdFlag};
 use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
@@ -48,8 +48,8 @@ fn try_main() -> Result<Exec> {
     crate::exec(args)
 }
 
-fn app() -> App<'static> {
-    let mut app = App::new("faketty")
+fn app() -> Command<'static> {
+    let mut app = Command::new("faketty")
         .override_usage("faketty <program> <args...>")
         .help_template("usage: {usage}")
         .arg(
@@ -60,9 +60,9 @@ fn app() -> App<'static> {
         )
         .arg(Arg::new("help").long("help"))
         .arg(Arg::new("version").long("version"))
-        .setting(AppSettings::TrailingVarArg)
-        .setting(AppSettings::DisableHelpFlag)
-        .setting(AppSettings::DisableVersionFlag);
+        .trailing_var_arg(true)
+        .disable_help_flag(true)
+        .disable_version_flag(true);
     if let Some(version) = option_env!("CARGO_PKG_VERSION") {
         app = app.version(version);
     }
