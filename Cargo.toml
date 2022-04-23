@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 clap = "3.1"
-nix = "0.24"
+nix = { version = "0.24", default-features = false, features = ["fs", "process", "term"] }
 
 [dev-dependencies]
 scratch = "1.0"
