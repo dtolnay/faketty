@@ -10,7 +10,7 @@ use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
 use nix::unistd::{self, ForkResult, Pid};
 use nix::Result;
-use std::ffi::CString;
+use std::ffi::{CString, OsString};
 use std::io::{self, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::RawFd;
@@ -55,7 +55,7 @@ fn app() -> Command<'static> {
         .arg(
             Arg::new("program")
                 .multiple_values(true)
-                .allow_invalid_utf8(true)
+                .value_parser(clap::builder::OsStringValueParser::new())
                 .required_unless_present_any(&["help", "version"]),
         )
         .arg(Arg::new("help").long("help"))
@@ -72,19 +72,19 @@ fn app() -> Command<'static> {
 fn args() -> Vec<CString> {
     let mut app = app();
     let matches = app.clone().get_matches();
-    if matches.is_present("help") {
+    if matches.contains_id("help") {
         let mut stdout = io::stdout();
         let _ = app.write_long_help(&mut stdout);
         process::exit(0);
     }
-    if matches.is_present("version") {
+    if matches.contains_id("version") {
         let mut stdout = io::stdout();
         let _ = stdout.write_all(app.render_version().as_bytes());
         process::exit(0);
     }
 
     matches
-        .values_of_os("program")
+        .get_many::<OsString>("program")
         .unwrap()
         .map(|os_string| CString::new(os_string.as_bytes()).unwrap())
         .collect()
