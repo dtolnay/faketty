@@ -9,7 +9,7 @@ repository = "https://github.com/dtolnay/faketty"
 readme = "README.md"
 
 [dependencies]
-clap = "3.2"
+clap = { version = "3.2.5", features = ["deprecated"] }
 nix = { version = "0.24", default-features = false, features = ["fs", "process", "term"] }
 
 [dev-dependencies]
