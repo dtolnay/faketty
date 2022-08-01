@@ -2,6 +2,7 @@
 name = "faketty"
 version = "1.0.7"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
+categories = ["command-line-utilities", "os::unix-apis"]
 description = "Wrapper to exec a command in a pty, even if redirecting the output"
 edition = "2021"
 license = "MIT OR Apache-2.0"
