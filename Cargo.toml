@@ -5,6 +5,7 @@ authors = ["David Tolnay <dtolnay@gmail.com>"]
 categories = ["command-line-utilities", "os::unix-apis"]
 description = "Wrapper to exec a command in a pty, even if redirecting the output"
 edition = "2021"
+keywords = ["tty"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/dtolnay/faketty"
