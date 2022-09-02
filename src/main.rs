@@ -56,7 +56,7 @@ fn app() -> Command<'static> {
             Arg::new("program")
                 .multiple_values(true)
                 .value_parser(clap::builder::OsStringValueParser::new())
-                .required_unless_present_any(&["help", "version"]),
+                .required_unless_present_any(["help", "version"]),
         )
         .arg(Arg::new("help").long("help"))
         .arg(Arg::new("version").long("version"))
