@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/faketty"
 
 [dependencies]
-clap = { version = "3.2.5", features = ["deprecated"] }
+clap = { version = "4", features = ["deprecated"] }
 nix = { version = "0.25", default-features = false, features = ["fs", "process", "term"] }
 
 [dev-dependencies]

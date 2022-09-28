@@ -4,7 +4,7 @@
     clippy::needless_pass_by_value
 )]
 
-use clap::{Arg, Command};
+use clap::{Arg, ArgAction, Command};
 use nix::fcntl::{self, FcntlArg, FdFlag};
 use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
@@ -48,19 +48,23 @@ fn try_main() -> Result<Exec> {
     crate::exec(args)
 }
 
-fn app() -> Command<'static> {
+fn app() -> Command {
     let mut app = Command::new("faketty")
         .override_usage("faketty <program> <args...>")
         .help_template("usage: {usage}")
         .arg(
             Arg::new("program")
-                .multiple_values(true)
+                .num_args(1..)
                 .value_parser(clap::builder::OsStringValueParser::new())
-                .required_unless_present_any(["help", "version"]),
+                .required_unless_present_any(["help", "version"])
+                .trailing_var_arg(true),
         )
-        .arg(Arg::new("help").long("help"))
-        .arg(Arg::new("version").long("version"))
-        .trailing_var_arg(true)
+        .arg(Arg::new("help").long("help").action(ArgAction::SetTrue))
+        .arg(
+            Arg::new("version")
+                .long("version")
+                .action(ArgAction::SetTrue),
+        )
         .disable_help_flag(true)
         .disable_version_flag(true);
     if let Some(version) = option_env!("CARGO_PKG_VERSION") {
@@ -72,12 +76,12 @@ fn app() -> Command<'static> {
 fn args() -> Vec<CString> {
     let mut app = app();
     let matches = app.clone().get_matches();
-    if matches.contains_id("help") {
+    if matches.get_flag("help") {
         let mut stdout = io::stdout();
-        let _ = app.write_long_help(&mut stdout);
+        let _ = write!(stdout, "{}", app.render_long_help());
         process::exit(0);
     }
-    if matches.contains_id("version") {
+    if matches.get_flag("version") {
         let mut stdout = io::stdout();
         let _ = stdout.write_all(app.render_version().as_bytes());
         process::exit(0);
