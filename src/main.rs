@@ -34,21 +34,21 @@ fn main() -> ! {
 
 fn try_main() -> Result<Exec> {
     let args = crate::args();
-    let stdin = crate::dup(0)?;
-    let stderr = crate::dup(2)?;
+    let new_stdin = crate::dup(0)?;
+    let new_stderr = crate::dup(2)?;
     let pty1 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty1.fork_result {
         crate::copyfd(pty1.master.as_fd(), 1);
         crate::copyexit(child);
     }
-    let stdout = crate::dup(1)?;
+    let new_stdout = crate::dup(1)?;
     let pty2 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty2.fork_result {
-        crate::copyfd(pty2.master.as_fd(), stderr);
+        crate::copyfd(pty2.master.as_fd(), new_stderr);
         crate::copyexit(child);
     }
-    unistd::dup2(stdin, 0)?;
-    unistd::dup2(stdout, 1)?;
+    unistd::dup2(new_stdin, 0)?;
+    unistd::dup2(new_stdout, 1)?;
     crate::exec(args)
 }
 
