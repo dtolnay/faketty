@@ -5,12 +5,14 @@
     clippy::uninlined_format_args
 )]
 
+mod error;
+
+use crate::error::Result;
 use clap::{Arg, ArgAction, Command};
 use nix::fcntl::{self, FcntlArg, FdFlag};
 use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
 use nix::unistd::{self, ForkResult, Pid};
-use nix::Result;
 use std::ffi::{CString, OsString};
 use std::io::{self, Write};
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd};
@@ -110,7 +112,8 @@ unsafe fn forkpty() -> Result<ForkptyResult> {
         ws_ypixel: 0,
     };
     let termios = None;
-    pty::forkpty(&winsize, termios)
+    let result = pty::forkpty(&winsize, termios)?;
+    Ok(result)
 }
 
 fn exec(args: Vec<CString>) -> Result<Exec> {
