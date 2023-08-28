@@ -9,7 +9,6 @@ mod error;
 
 use crate::error::Result;
 use clap::{Arg, ArgAction, Command};
-use nix::fcntl::{self, FcntlArg, FdFlag};
 use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
 use nix::unistd::{self, ForkResult, Pid};
@@ -17,7 +16,6 @@ use std::ffi::{CString, OsString};
 use std::io::{self, Write};
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd};
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::io::RawFd;
 use std::process;
 
 enum Exec {}
@@ -32,23 +30,27 @@ fn main() -> ! {
     }
 }
 
+const STDIN: BorrowedFd = unsafe { BorrowedFd::borrow_raw(0) };
+const STDOUT: BorrowedFd = unsafe { BorrowedFd::borrow_raw(1) };
+const STDERR: BorrowedFd = unsafe { BorrowedFd::borrow_raw(2) };
+
 fn try_main() -> Result<Exec> {
     let args = crate::args();
-    let new_stdin = crate::dup(0)?;
-    let new_stderr = crate::dup(2)?;
+    let new_stdin = STDIN.try_clone_to_owned()?;
+    let new_stderr = STDERR.try_clone_to_owned()?;
     let pty1 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty1.fork_result {
-        crate::copyfd(pty1.master.as_fd(), 1);
+        crate::copyfd(pty1.master.as_fd(), STDOUT);
         crate::copyexit(child);
     }
-    let new_stdout = crate::dup(1)?;
+    let new_stdout = STDOUT.try_clone_to_owned()?;
     let pty2 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty2.fork_result {
-        crate::copyfd(pty2.master.as_fd(), new_stderr);
+        crate::copyfd(pty2.master.as_fd(), new_stderr.as_fd());
         crate::copyexit(child);
     }
-    unistd::dup2(new_stdin, 0)?;
-    unistd::dup2(new_stdout, 1)?;
+    unistd::dup2(new_stdin.as_raw_fd(), STDIN.as_raw_fd())?;
+    unistd::dup2(new_stdout.as_raw_fd(), STDOUT.as_raw_fd())?;
     crate::exec(args)
 }
 
@@ -98,12 +100,6 @@ fn args() -> Vec<CString> {
         .collect()
 }
 
-fn dup(fd: RawFd) -> Result<RawFd> {
-    let new = unistd::dup(fd)?;
-    fcntl::fcntl(new, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC))?;
-    Ok(new)
-}
-
 unsafe fn forkpty() -> Result<ForkptyResult> {
     let winsize = Winsize {
         ws_row: 24,
@@ -122,7 +118,7 @@ fn exec(args: Vec<CString>) -> Result<Exec> {
     unreachable!();
 }
 
-fn copyfd(read: BorrowedFd, write: RawFd) {
+fn copyfd(read: BorrowedFd, write: BorrowedFd) {
     const BUF: usize = 4096;
     let mut buf = [0; BUF];
     loop {
@@ -135,9 +131,9 @@ fn copyfd(read: BorrowedFd, write: RawFd) {
     }
 }
 
-fn write_all(fd: RawFd, mut buf: &[u8]) -> Result<()> {
+fn write_all(fd: BorrowedFd, mut buf: &[u8]) -> Result<()> {
     while !buf.is_empty() {
-        let n = unistd::write(fd, buf)?;
+        let n = unistd::write(fd.as_raw_fd(), buf)?;
         buf = &buf[n..];
     }
     Ok(())
