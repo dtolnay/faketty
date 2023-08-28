@@ -13,6 +13,7 @@ use nix::unistd::{self, ForkResult, Pid};
 use nix::Result;
 use std::ffi::{CString, OsString};
 use std::io::{self, Write};
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::RawFd;
 use std::process;
@@ -35,13 +36,13 @@ fn try_main() -> Result<Exec> {
     let stderr = crate::dup(2)?;
     let pty1 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty1.fork_result {
-        crate::copyfd(pty1.master, 1);
+        crate::copyfd(pty1.master.as_fd(), 1);
         crate::copyexit(child);
     }
     let stdout = crate::dup(1)?;
     let pty2 = unsafe { crate::forkpty() }?;
     if let ForkResult::Parent { child } = pty2.fork_result {
-        crate::copyfd(pty2.master, stderr);
+        crate::copyfd(pty2.master.as_fd(), stderr);
         crate::copyexit(child);
     }
     unistd::dup2(stdin, 0)?;
@@ -118,11 +119,11 @@ fn exec(args: Vec<CString>) -> Result<Exec> {
     unreachable!();
 }
 
-fn copyfd(read: RawFd, write: RawFd) {
+fn copyfd(read: BorrowedFd, write: RawFd) {
     const BUF: usize = 4096;
     let mut buf = [0; BUF];
     loop {
-        match unistd::read(read, &mut buf) {
+        match unistd::read(read.as_raw_fd(), &mut buf) {
             Ok(0) | Err(_) => return,
             Ok(n) => {
                 let _ = write_all(write, &buf[..n]);
