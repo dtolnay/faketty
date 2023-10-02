@@ -1,0 +1,27 @@
+name: Install
+
+on:
+  workflow_dispatch:
+  schedule: [cron: "40 1 * * *"]
+
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
+jobs:
+  install:
+    name: Rust ${{matrix.rust}}${{matrix.locked && ', locked' || ''}}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, nightly]
+        locked: [false, true]
+    timeout-minutes: 45
+    steps:
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{matrix.rust}}
+      - run: cargo install faketty ${{matrix.locked && '--locked' || ''}}
