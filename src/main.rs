@@ -1,3 +1,4 @@
+#![deny(unsafe_op_in_unsafe_fn)]
 #![allow(
     clippy::empty_enum,
     clippy::let_underscore_untyped,
@@ -108,7 +109,7 @@ unsafe fn forkpty() -> Result<ForkptyResult> {
         ws_ypixel: 0,
     };
     let termios = None;
-    let result = pty::forkpty(&winsize, termios)?;
+    let result = unsafe { pty::forkpty(&winsize, termios) }?;
     Ok(result)
 }
 
