@@ -109,7 +109,7 @@ unsafe fn forkpty() -> Result<ForkptyResult> {
         ws_ypixel: 0,
     };
     let termios = None;
-    let result = pty::forkpty(&winsize, termios)?;
+    let result = unsafe { pty::forkpty(&winsize, termios) }?;
     Ok(result)
 }
 
