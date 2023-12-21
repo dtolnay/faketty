@@ -1,3 +1,4 @@
+#![deny(unsafe_op_in_unsafe_fn)]
 #![allow(
     clippy::empty_enum,
     clippy::let_underscore_untyped,
