@@ -134,7 +134,7 @@ fn copyfd(read: BorrowedFd, write: BorrowedFd) {
 
 fn write_all(fd: BorrowedFd, mut buf: &[u8]) -> Result<()> {
     while !buf.is_empty() {
-        let n = unistd::write(fd.as_raw_fd(), buf)?;
+        let n = unistd::write(fd, buf)?;
         buf = &buf[n..];
     }
     Ok(())
