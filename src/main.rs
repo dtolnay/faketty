@@ -12,7 +12,7 @@ use crate::error::Result;
 use clap::{Arg, ArgAction, Command};
 use nix::pty::{self, ForkptyResult, Winsize};
 use nix::sys::wait::{self, WaitStatus};
-use nix::unistd::{self, ForkResult, Pid};
+use nix::unistd::{self, Pid};
 use std::ffi::{CString, OsString};
 use std::io::{self, Write};
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd};
@@ -40,14 +40,14 @@ fn try_main() -> Result<Exec> {
     let new_stdin = STDIN.try_clone_to_owned()?;
     let new_stderr = STDERR.try_clone_to_owned()?;
     let pty1 = unsafe { crate::forkpty() }?;
-    if let ForkResult::Parent { child } = pty1.fork_result {
-        crate::copyfd(pty1.master.as_fd(), STDOUT);
+    if let ForkptyResult::Parent { child, master } = pty1 {
+        crate::copyfd(master.as_fd(), STDOUT);
         crate::copyexit(child);
     }
     let new_stdout = STDOUT.try_clone_to_owned()?;
     let pty2 = unsafe { crate::forkpty() }?;
-    if let ForkResult::Parent { child } = pty2.fork_result {
-        crate::copyfd(pty2.master.as_fd(), new_stderr.as_fd());
+    if let ForkptyResult::Parent { child, master } = pty2 {
+        crate::copyfd(master.as_fd(), new_stderr.as_fd());
         crate::copyexit(child);
     }
     unistd::dup2(new_stdin.as_raw_fd(), STDIN.as_raw_fd())?;
