@@ -23,11 +23,12 @@ enum Exec {}
 
 fn main() -> ! {
     match try_main() {
-        Ok(exec) => match exec {},
         Err(err) => {
             let _ = writeln!(io::stderr(), "faketty: {}", err);
             process::exit(1);
         }
+        #[allow(unreachable_patterns)]
+        Ok(exec) => match exec {},
     }
 }
 
