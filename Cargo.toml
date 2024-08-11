@@ -1,6 +1,6 @@
 [package]
 name = "faketty"
-version = "1.0.17"
+version = "1.0.18"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 categories = ["command-line-utilities", "os::unix-apis"]
 description = "Wrapper to exec a command in a pty, even if redirecting the output"
