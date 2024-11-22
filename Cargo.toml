@@ -1,6 +1,6 @@
 [package]
 name = "faketty"
-version = "1.0.18"
+version = "1.0.19"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 categories = ["command-line-utilities", "os::unix-apis"]
 description = "Wrapper to exec a command in a pty, even if redirecting the output"
@@ -9,8 +9,16 @@ keywords = ["tty"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/faketty"
 
+[[bin]]
+name = "faketty"
+required-features = ["binary"]
+
+[features]
+default = ["binary"]
+binary = ["dep:clap"]
+
 [dependencies]
-clap = { version = "4", features = ["deprecated"] }
+clap = { version = "4", features = ["deprecated"], optional = true }
 nix = { version = "0.29", default-features = false, features = ["fs", "process", "term"] }
 
 [dev-dependencies]

@@ -45,6 +45,23 @@ streams.
 
 <br>
 
+## As a library
+
+`faketty` can be added to the [`dev-dependencies`] of cargo projects,
+in which case we can drop the default `clap` crate (for command line argument parsing)
+with `--no-default-features`:
+
+```bash
+cargo add faketty --dev --no-default-features
+```
+
+Note that `faketty::run_command` calls [`exec(3)`], therefore the child process
+will replace the current (parent) process.
+
+[`exec(3)`]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/exec.html
+
+<br>
+
 #### License
 
 <sup>

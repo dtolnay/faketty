@@ -3,8 +3,11 @@ use std::io;
 
 pub(crate) type Result<T> = std::result::Result<T, Error>;
 
+/// Possible errors for the result of [`run_command`][crate::run_command].
 #[derive(Debug)]
-pub(crate) enum Error {
+#[non_exhaustive]
+#[allow(missing_docs)]
+pub enum Error {
     Nix(nix::Error),
     Io(io::Error),
 }
