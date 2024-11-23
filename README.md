@@ -55,6 +55,7 @@ with `--no-default-features`:
 cargo add faketty --dev --no-default-features
 ```
 
+A minimal example of the library usage is provided under [examples](./examples).
 Note that `faketty::run_command` calls [`exec(3)`], therefore the child process
 will replace the current (parent) process.
 
