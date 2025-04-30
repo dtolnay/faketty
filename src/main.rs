@@ -15,7 +15,7 @@ use nix::sys::wait::{self, WaitStatus};
 use nix::unistd::{self, Pid};
 use std::ffi::{CString, OsString};
 use std::io::{self, Write};
-use std::os::fd::{AsFd, AsRawFd, BorrowedFd};
+use std::os::fd::{AsFd, BorrowedFd};
 use std::os::unix::ffi::OsStrExt;
 use std::process;
 
@@ -51,8 +51,8 @@ fn try_main() -> Result<Exec> {
         crate::copyfd(master.as_fd(), new_stderr.as_fd());
         crate::copyexit(child);
     }
-    unistd::dup2(new_stdin.as_raw_fd(), STDIN.as_raw_fd())?;
-    unistd::dup2(new_stdout.as_raw_fd(), STDOUT.as_raw_fd())?;
+    unistd::dup2_stdin(new_stdin)?;
+    unistd::dup2_stdout(new_stdout)?;
     crate::exec(args)
 }
 
@@ -124,7 +124,7 @@ fn copyfd(read: BorrowedFd, write: BorrowedFd) {
     const BUF: usize = 4096;
     let mut buf = [0; BUF];
     loop {
-        match unistd::read(read.as_raw_fd(), &mut buf) {
+        match unistd::read(read, &mut buf) {
             Ok(0) | Err(_) => return,
             Ok(n) => {
                 let _ = write_all(write, &buf[..n]);
