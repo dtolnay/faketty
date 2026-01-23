@@ -12,7 +12,7 @@ rust-version = "1.74"
 
 [dependencies]
 clap = { version = "4", features = ["deprecated"] }
-nix = { version = "0.30", default-features = false, features = ["fs", "process", "term"] }
+nix = { version = "0.31", default-features = false, features = ["fs", "process", "term"] }
 
 [dev-dependencies]
 scratch = "1.0"
