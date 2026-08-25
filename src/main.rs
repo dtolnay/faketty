@@ -116,8 +116,7 @@ unsafe fn forkpty() -> Result<ForkptyResult> {
 
 fn exec(args: Vec<CString>) -> Result<Exec> {
     let args: Vec<_> = args.iter().map(CString::as_c_str).collect();
-    unistd::execvp(args[0], &args)?;
-    unreachable!();
+    match unistd::execvp(args[0], &args)? {}
 }
 
 fn copyfd(read: BorrowedFd, write: BorrowedFd) {
